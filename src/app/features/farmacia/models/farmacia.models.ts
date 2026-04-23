@@ -2,13 +2,22 @@
 //  Modelos del Módulo Farmacia — Galenos Pro
 // ══════════════════════════════════════════════════════════════
 
+export interface EquipoAsignado {
+  nombrePc: string;
+  estado: boolean;
+}
+
 export interface Farmacia {
   id: number;
   nombre: string;
   codigo: string;
+  habilitado: boolean;
+  tipo: string;
+  codigoDigemid: string;
   direccion: string;
   responsable: string;
   telefono: string;
+  equiposAsignados: EquipoAsignado[];
   estado: EstadoFarmacia;
   createdAt: string;
   updatedAt: string;
@@ -91,9 +100,13 @@ export type TipoMovimiento = 'ENTRADA' | 'SALIDA' | 'AJUSTE' | 'DEVOLUCION' | 'T
 export interface CreateFarmaciaDto {
   nombre: string;
   codigo: string;
+  habilitado: boolean;
+  tipo: string;
+  codigoDigemid: string;
   direccion: string;
   responsable: string;
   telefono: string;
+  equiposAsignados: EquipoAsignado[];
 }
 
 export interface CreateMovimientoDto {

@@ -16,9 +16,10 @@
         <tr>
           <th>Código</th>
           <th>Nombre</th>
-          <th>Dirección</th>
+          <th>Tipo</th>
+          <th>Cód. DIGEMID</th>
           <th>Responsable</th>
-          <th>Teléfono</th>
+          <th>Equipos</th>
           <th>Estado</th>
           <th class="tw-text-center">Acciones</th>
         </tr>
@@ -27,9 +28,10 @@
         <tr>
           <td><code class="tw-text-xs tw-font-mono tw-bg-[#f1f5f9] tw-px-2 tw-py-0.5 tw-rounded">{{ f.codigo }}</code></td>
           <td class="tw-font-medium tw-text-sm">{{ f.nombre }}</td>
-          <td class="tw-text-sm tw-text-[#64748b]">{{ f.direccion }}</td>
+          <td class="tw-text-sm tw-text-[#64748b]">{{ f.tipo }}</td>
+          <td class="tw-text-sm tw-text-[#64748b]">{{ f.codigoDigemid }}</td>
           <td class="tw-text-sm">{{ f.responsable }}</td>
-          <td class="tw-text-sm tw-text-[#64748b]">{{ f.telefono }}</td>
+          <td class="tw-text-sm tw-text-[#64748b]">{{ f.equiposAsignados?.length ?? 0 }}</td>
           <td>
             <p-tag [severity]="getSeveridadEstado(f.estado)" [value]="f.estado" styleClass="tw-text-xs" />
           </td>
@@ -47,70 +49,165 @@
   </div>
 </div>
 
-<!-- Modal crear/editar farmacia -->
+<!-- Modal Agregar / Editar Farmacia -->
 <p-dialog
   [visible]="showModal()"
   (visibleChange)="showModal.set($event)"
-  [header]="editingId() ? 'Editar Farmacia' : 'Nueva Farmacia'"
-  [modal]="true" [draggable]="false" [style]="{ width: '520px' }">
+  [header]="editingId() ? 'Editar Farmacia' : 'Agregar Farmacia'"
+  [modal]="true"
+  [draggable]="false"
+  [style]="{ width: '560px' }">
 
   <form [formGroup]="form" (ngSubmit)="onSubmit()">
-    <div class="tw-flex tw-flex-col tw-gap-5 tw-pt-2">
+    <div class="tw-flex tw-flex-col tw-gap-4 tw-pt-1">
 
-      <div class="tw-grid tw-grid-cols-2 tw-gap-4">
-        <div class="tw-col-span-2">
-          <p-floatlabel variant="on">
-            <input pInputText id="nombre" formControlName="nombre" class="tw-w-full" />
-            <label for="nombre">Nombre de la farmacia *</label>
-          </p-floatlabel>
+      <!-- ── Datos Generales ── -->
+      <fieldset class="tw-border tw-border-[#e2e8f0] tw-rounded-lg tw-p-4 tw-m-0">
+        <legend class="tw-text-xs tw-font-semibold tw-text-[#64748b] tw-uppercase tw-tracking-wide tw-px-2">
+          Datos Generales
+        </legend>
+
+        <!-- Fila 1: Código + Habilitado -->
+        <div class="tw-flex tw-items-end tw-gap-4 tw-mb-4">
+          <div class="tw-flex-1">
+            <label class="tw-block tw-text-xs tw-font-medium tw-text-[#64748b] tw-mb-1">Código</label>
+            <input pInputText formControlName="codigo"
+                   class="tw-w-full"
+                   placeholder="Ej: FC-01"
+                   style="text-transform:uppercase" />
+            @if (form.get('codigo')?.invalid && form.get('codigo')?.touched) {
+              <small class="tw-text-red-500 tw-text-xs">Solo letras, números y guiones.</small>
+            }
+          </div>
+          <div class="tw-flex tw-items-center tw-gap-2 tw-pb-1">
+            <p-checkbox formControlName="habilitado" [binary]="true" inputId="habilitado" />
+            <label for="habilitado" class="tw-text-sm tw-font-medium tw-text-[#1e293b] tw-cursor-pointer">
+              Habilitado
+            </label>
+          </div>
+        </div>
+
+        <!-- Fila 2: Nombre -->
+        <div class="tw-mb-4">
+          <label class="tw-block tw-text-xs tw-font-medium tw-text-[#64748b] tw-mb-1">Nombre</label>
+          <input pInputText formControlName="nombre" class="tw-w-full" />
           @if (form.get('nombre')?.invalid && form.get('nombre')?.touched) {
             <small class="tw-text-red-500 tw-text-xs">Mínimo 3 caracteres.</small>
           }
         </div>
 
-        <div>
-          <p-floatlabel variant="on">
-            <input pInputText id="codigo" formControlName="codigo" class="tw-w-full"
-                   placeholder="Ej: FC-01" style="text-transform:uppercase" />
-            <label for="codigo">Código *</label>
-          </p-floatlabel>
-          @if (form.get('codigo')?.invalid && form.get('codigo')?.touched) {
-            <small class="tw-text-red-500 tw-text-xs">Solo letras, números y guiones.</small>
-          }
+        <!-- Fila 3: Tipo + Código DIGEMID -->
+        <div class="tw-grid tw-grid-cols-2 tw-gap-4">
+          <div>
+            <label class="tw-block tw-text-xs tw-font-medium tw-text-[#64748b] tw-mb-1">Tipo</label>
+            <p-select
+              formControlName="tipo"
+              [options]="tipoOptions"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Seleccionar"
+              styleClass="tw-w-full" />
+            @if (form.get('tipo')?.invalid && form.get('tipo')?.touched) {
+              <small class="tw-text-red-500 tw-text-xs">Seleccione un tipo.</small>
+            }
+          </div>
+          <div>
+            <label class="tw-block tw-text-xs tw-font-medium tw-text-[#64748b] tw-mb-1">Código DIGEMID</label>
+            <input pInputText formControlName="codigoDigemid" class="tw-w-full" />
+          </div>
         </div>
+      </fieldset>
 
-        <div>
-          <p-floatlabel variant="on">
-            <input pInputText id="telefono" formControlName="telefono" class="tw-w-full" />
-            <label for="telefono">Teléfono *</label>
-          </p-floatlabel>
-          @if (form.get('telefono')?.invalid && form.get('telefono')?.touched) {
-            <small class="tw-text-red-500 tw-text-xs">7 a 15 dígitos.</small>
-          }
-        </div>
+      <!-- ── Lista de Equipos Asignados ── -->
+      <fieldset class="tw-border tw-border-[#e2e8f0] tw-rounded-lg tw-p-0 tw-m-0 tw-overflow-hidden">
+        <legend class="tw-text-xs tw-font-semibold tw-text-[#64748b] tw-uppercase tw-tracking-wide tw-px-2 tw-mx-2">
+          Lista de Equipos Asignados
+        </legend>
 
-        <div class="tw-col-span-2">
-          <p-floatlabel variant="on">
-            <input pInputText id="direccion" formControlName="direccion" class="tw-w-full" />
-            <label for="direccion">Dirección / Ubicación *</label>
-          </p-floatlabel>
-        </div>
+        <div class="tw-flex tw-gap-2 tw-px-3 tw-pb-3">
+          <!-- Tabla de equipos -->
+          <div class="tw-flex-1 tw-border tw-border-[#e2e8f0] tw-rounded tw-overflow-hidden">
+            <!-- Cabecera tabla -->
+            <div class="tw-grid tw-grid-cols-[1fr_56px] tw-bg-[#e8f0fe] tw-border-b tw-border-[#e2e8f0]">
+              <div class="tw-text-center tw-text-xs tw-font-semibold tw-text-[#1a5ecb] tw-py-1.5 tw-uppercase tw-tracking-wide">
+                Nombre PC
+              </div>
+              <div class="tw-text-center tw-text-xs tw-font-semibold tw-text-[#1a5ecb] tw-py-1.5 tw-uppercase tw-tracking-wide">
+                Estado
+              </div>
+            </div>
 
-        <div class="tw-col-span-2">
-          <p-floatlabel variant="on">
-            <input pInputText id="responsable" formControlName="responsable" class="tw-w-full" />
-            <label for="responsable">Químico Farmacéutico Responsable *</label>
-          </p-floatlabel>
+            <!-- Filas equipos -->
+            <div class="tw-overflow-y-auto" style="max-height: 160px;">
+              @for (equipo of equipos(); track equipo.nombrePc; let i = $index) {
+                <div class="tw-grid tw-grid-cols-[1fr_56px] tw-border-b tw-border-[#f1f5f9] tw-items-center hover:tw-bg-[#f8fafc]">
+                  <div class="tw-text-sm tw-text-[#1e293b] tw-px-3 tw-py-1.5">{{ equipo.nombrePc }}</div>
+                  <div class="tw-flex tw-justify-center tw-items-center tw-py-1.5">
+                    <p-checkbox
+                      [(ngModel)]="equipo.estado"
+                      [ngModelOptions]="{ standalone: true }"
+                      [binary]="true" />
+                  </div>
+                </div>
+              }
+              @if (equipos().length === 0) {
+                <div class="tw-text-center tw-text-xs tw-text-[#94a3b8] tw-py-6">
+                  Sin equipos asignados
+                </div>
+              }
+            </div>
+
+            <!-- Input nuevo equipo -->
+            <div class="tw-border-t tw-border-[#e2e8f0] tw-flex tw-items-center tw-gap-2 tw-px-2 tw-py-1.5 tw-bg-[#fafbfc]">
+              <input
+                pInputText
+                [value]="nuevoEquipo()"
+                (input)="onNuevoEquipoChange($event)"
+                (keydown)="onNuevoEquipoKeydown($event)"
+                placeholder="Nombre PC..."
+                class="tw-flex-1 tw-text-xs"
+                style="height: 28px; font-size: 12px;" />
+            </div>
+          </div>
+
+          <!-- Botones laterales -->
+          <div class="tw-flex tw-flex-col tw-gap-1.5 tw-pt-0.5">
+            <p-button
+              icon="pi pi-plus"
+              size="small"
+              [outlined]="true"
+              severity="info"
+              (onClick)="agregarEquipo()"
+              pTooltip="Agregar equipo"
+              [style]="{ width: '32px', height: '32px', padding: '0' }" />
+            <p-button
+              icon="pi pi-times"
+              size="small"
+              severity="danger"
+              (onClick)="eliminarEquipo(equipos().length - 1)"
+              pTooltip="Eliminar último"
+              [disabled]="equipos().length === 0"
+              [style]="{ width: '32px', height: '32px', padding: '0' }" />
+          </div>
         </div>
-      </div>
+      </fieldset>
+
     </div>
   </form>
 
   <ng-template pTemplate="footer">
     <div class="tw-flex tw-gap-3 tw-justify-end">
-      <p-button label="Cancelar" severity="secondary" outlined (onClick)="showModal.set(false)" />
-      <p-button [label]="editingId() ? 'Actualizar' : 'Crear Farmacia'" icon="pi pi-check"
-                [loading]="isSaving()" (onClick)="onSubmit()" />
+      <p-button
+        label="Cancelar (ESC)"
+        icon="pi pi-arrow-left"
+        severity="secondary"
+        outlined
+        (onClick)="showModal.set(false)" />
+      <p-button
+        [label]="editingId() ? 'Actualizar (F2)' : 'Aceptar (F2)'"
+        icon="pi pi-save"
+        [loading]="isSaving()"
+        (onClick)="onSubmit()" />
     </div>
   </ng-template>
 </p-dialog>
