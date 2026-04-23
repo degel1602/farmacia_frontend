@@ -1,0 +1,223 @@
+<!-- ═══════════════════════════════════════════════════════════
+     Movimientos de Inventario — Galenos Pro Farmacia
+     ═══════════════════════════════════════════════════════════ -->
+<div class="tw-flex tw-flex-col tw-gap-4">
+
+  <!-- Encabezado -->
+  <div class="tw-flex tw-items-center tw-justify-between tw-flex-wrap tw-gap-3">
+    <div>
+      <h2 class="tw-text-xl tw-font-bold tw-text-[#1e293b] tw-m-0">Movimientos de Inventario</h2>
+      <p class="tw-text-sm tw-text-[#64748b] tw-mt-1 tw-mb-0">Registro de entradas, salidas y ajustes</p>
+    </div>
+    <p-button
+      label="Nuevo Movimiento"
+      icon="pi pi-plus"
+      size="small"
+      (onClick)="abrirModal()" />
+  </div>
+
+  <!-- Tabla de movimientos -->
+  <div class="gp-card tw-overflow-hidden">
+    <p-table
+      [value]="movimientos()"
+      [loading]="isLoading()"
+      [paginator]="true"
+      [rows]="20"
+      [rowHover]="true"
+      sortMode="single"
+      styleClass="p-datatable-sm"
+      scrollable
+      scrollHeight="calc(100vh - 320px)">
+
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Tipo</th>
+          <th>Fecha</th>
+          <th style="min-width:220px">Medicamento</th>
+          <th>Farmacia</th>
+          <th class="tw-text-right">Cant. Anterior</th>
+          <th class="tw-text-right">Cantidad</th>
+          <th class="tw-text-right">Cant. Resultante</th>
+          <th>Motivo</th>
+          <th>Documento</th>
+          <th>Usuario</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-mov>
+        <tr>
+          <td>
+            <p-tag
+              [severity]="getSeverityTipo(mov.tipo)"
+              styleClass="tw-flex tw-items-center tw-gap-1">
+              <i [class]="getIconTipo(mov.tipo) + ' tw-text-xs'"></i>
+              {{ mov.tipo }}
+            </p-tag>
+          </td>
+          <td>
+            <div class="tw-text-sm">{{ mov.fechaMovimiento | date:'dd/MM/yyyy' }}</div>
+            <div class="tw-text-xs tw-text-[#94a3b8]">{{ mov.fechaMovimiento | date:'HH:mm' }}</div>
+          </td>
+          <td>
+            <div class="tw-font-medium tw-text-sm tw-text-[#1e293b]">{{ mov.medicamento.nombre }}</div>
+            <div class="tw-text-xs tw-text-[#64748b]">{{ mov.medicamento.codigo }}</div>
+          </td>
+          <td class="tw-text-sm">{{ mov.farmacia.nombre }}</td>
+          <td class="tw-text-right tw-text-sm tw-text-[#64748b]">{{ mov.cantidadAnterior | number }}</td>
+          <td class="tw-text-right">
+            <span class="tw-font-semibold tw-text-sm"
+                  [class.tw-text-green-600]="mov.tipo === 'ENTRADA'"
+                  [class.tw-text-red-600]="mov.tipo === 'SALIDA'">
+              {{ mov.tipo === 'SALIDA' ? '-' : '+' }}{{ mov.cantidad | number }}
+            </span>
+          </td>
+          <td class="tw-text-right tw-font-semibold tw-text-sm tw-text-[#1e293b]">
+            {{ mov.cantidadResultante | number }}
+          </td>
+          <td>
+            <span class="tw-text-sm tw-text-[#475569]" [title]="mov.motivoMovimiento">
+              {{ mov.motivoMovimiento | slice:0:30 }}{{ mov.motivoMovimiento.length > 30 ? '…' : '' }}
+            </span>
+          </td>
+          <td>
+            <code class="tw-text-xs tw-text-[#64748b]">{{ mov.numeroDocumento ?? '—' }}</code>
+          </td>
+          <td class="tw-text-sm tw-text-[#64748b]">{{ mov.usuario }}</td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="10">
+            <div class="tw-flex tw-flex-col tw-items-center tw-py-16 tw-text-[#94a3b8]">
+              <i class="pi pi-arrow-right-arrow-left tw-text-5xl tw-mb-4"></i>
+              <p class="tw-m-0 tw-font-medium">No hay movimientos registrados</p>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<!-- ── Modal Nuevo Movimiento ─────────────────────────────────── -->
+<p-dialog
+  [visible]="showModal()"
+  (visibleChange)="showModal.set($event)"
+  header="Registrar Movimiento"
+  [modal]="true"
+  [draggable]="false"
+  [style]="{ width: '580px' }"
+  [closeOnEscape]="true">
+
+  <form [formGroup]="form" (ngSubmit)="onSubmit()">
+    <div class="tw-flex tw-flex-col tw-gap-5 tw-pt-2">
+
+      <!-- Tipo de movimiento — selector visual -->
+      <div>
+        <label class="tw-text-xs tw-font-medium tw-text-[#64748b] tw-block tw-mb-2">
+          Tipo de movimiento <span class="tw-text-red-500">*</span>
+        </label>
+        <div class="tw-grid tw-grid-cols-5 tw-gap-2">
+          @for (opt of tipoOptions; track opt.value) {
+            <button
+              type="button"
+              class="tw-flex tw-flex-col tw-items-center tw-gap-1 tw-p-2 tw-rounded-lg tw-border-2 tw-text-xs tw-font-medium tw-transition-all tw-cursor-pointer"
+              [class.tw-border-blue-500]="tipo.value === opt.value"
+              [class.tw-bg-blue-50]="tipo.value === opt.value"
+              [class.tw-text-blue-600]="tipo.value === opt.value"
+              [class.tw-border-gray-200]="tipo.value !== opt.value"
+              [class.tw-text-gray-500]="tipo.value !== opt.value"
+              (click)="tipo.setValue(opt.value)">
+              <i [class]="opt.icon + ' tw-text-base'"></i>
+              {{ opt.label }}
+            </button>
+          }
+        </div>
+        @if (tipo.invalid && tipo.touched) {
+          <small class="tw-text-red-500 tw-text-xs tw-mt-1 tw-block">Seleccione el tipo de movimiento.</small>
+        }
+      </div>
+
+      <!-- Medicamento + Cantidad -->
+      <div class="tw-grid tw-grid-cols-2 tw-gap-4">
+        <div>
+          <p-floatlabel variant="on">
+            <input pInputText id="medicamentoId" formControlName="medicamentoId"
+                   class="tw-w-full" type="number" />
+            <label for="medicamentoId">ID Medicamento *</label>
+          </p-floatlabel>
+          @if (form.get('medicamentoId')?.invalid && form.get('medicamentoId')?.touched) {
+            <small class="tw-text-red-500 tw-text-xs">Requerido.</small>
+          }
+        </div>
+        <div>
+          <p-floatlabel variant="on">
+            <p-inputnumber
+              inputId="cantidad"
+              formControlName="cantidad"
+              [min]="1"
+              [max]="99999"
+              [showButtons]="false"
+              styleClass="tw-w-full"
+              inputStyleClass="tw-w-full" />
+            <label for="cantidad">Cantidad *</label>
+          </p-floatlabel>
+          @if (cantidad.invalid && cantidad.touched) {
+            <small class="tw-text-red-500 tw-text-xs">
+              @if (cantidad.hasError('required')) { Requerido. }
+              @else if (cantidad.hasError('min')) { Mínimo 1 unidad. }
+            </small>
+          }
+        </div>
+      </div>
+
+      <!-- Motivo -->
+      <div>
+        <p-floatlabel variant="on">
+          <textarea
+            pTextarea
+            id="motivoMovimiento"
+            formControlName="motivoMovimiento"
+            rows="2"
+            class="tw-w-full"></textarea>
+          <label for="motivoMovimiento">Motivo del movimiento *</label>
+        </p-floatlabel>
+        @if (motivo.invalid && motivo.touched) {
+          <small class="tw-text-red-500 tw-text-xs">Mínimo 5 caracteres.</small>
+        }
+      </div>
+
+      <!-- N° Documento + Proveedor -->
+      <div class="tw-grid tw-grid-cols-2 tw-gap-4">
+        <p-floatlabel variant="on">
+          <input pInputText id="numeroDocumento" formControlName="numeroDocumento" class="tw-w-full" />
+          <label for="numeroDocumento">N° Documento</label>
+        </p-floatlabel>
+        <p-floatlabel variant="on">
+          <input pInputText id="proveedor" formControlName="proveedor" class="tw-w-full" />
+          <label for="proveedor">Proveedor</label>
+        </p-floatlabel>
+      </div>
+
+      <!-- Observaciones -->
+      <p-floatlabel variant="on">
+        <textarea pTextarea id="observaciones" formControlName="observaciones"
+                  rows="2" class="tw-w-full"></textarea>
+        <label for="observaciones">Observaciones</label>
+      </p-floatlabel>
+
+    </div>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <div class="tw-flex tw-gap-3 tw-justify-end">
+      <p-button label="Cancelar" severity="secondary" outlined (onClick)="showModal.set(false)" />
+      <p-button
+        label="Registrar Movimiento"
+        icon="pi pi-check"
+        [loading]="isSaving()"
+        (onClick)="onSubmit()" />
+    </div>
+  </ng-template>
+</p-dialog>

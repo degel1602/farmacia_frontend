@@ -1,0 +1,1 @@
+var e={production:!0,qa:!1,envName:"production",apiBaseUrl:"https://api.galenosp.com/api/v1",apiTimeout:3e4,appVersion:"1.0.0",appName:"Galenos Pro",features:{enableDebugLogs:!1,enableMockData:!1}};export{e as a};
