@@ -1,0 +1,35 @@
+# Dependecies
+node_modules/
+
+# MAC
+__MACOSX
+
+# Build output
+dist/
+.angular/
+
+# Enviroment files (keep templates. ignore secrets)
+src/environments/environment.prod.ts
+src/environments/environment.qa.ts
+
+# IDE
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS
+DS_Store
+Thumbs.db
+
+# Logs
+npm-debug.log*
+
+# Testing
+coverage/
+
+# Misc
+*.zip
